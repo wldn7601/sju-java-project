@@ -55,6 +55,10 @@ public class MemberService {
         if (id.isBlank()) {
             throw new InvalidInputException("아이디를 입력해주세요.");
         }
+        // 공백이나 기호가 있으면 출력에서 다른 항목과 헷갈릴 수 있어 영문과 숫자만 허용
+        if (!id.matches("[A-Za-z0-9]+")) {
+            throw new InvalidInputException("아이디는 영문과 숫자만 사용할 수 있습니다.");
+        }
         if (idExists(id)) {
             throw new DuplicateIdException(id);
         }

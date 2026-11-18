@@ -13,7 +13,6 @@ import service.MemberService;
 import service.RentalNotFoundException;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -98,7 +97,7 @@ public class Main {
     }
 
     private static void signUp() {
-        System.out.print("사용할 id: ");
+        System.out.print("사용할 id (영문, 숫자): ");
         String id = scanner.nextLine().trim();
         System.out.print("password (8자 이상): ");
         String password = scanner.nextLine().trim();
@@ -133,10 +132,10 @@ public class Main {
                     registerBook();
                     break;
                 case "2":
-                    printBooks(libraryService.getAllBooks(), "등록된 도서가 없습니다.");
+                    printBooks(libraryService.getAllBooks(), "등록된 도서가 없습니다.", true);
                     break;
                 case "3":
-                    searchBook();
+                    searchBook(true);
                     break;
                 case "4":
                     updateBook();
@@ -179,10 +178,10 @@ public class Main {
 
             switch (choice) {
                 case "1":
-                    printBooks(libraryService.getAllBooks(), "등록된 도서가 없습니다.");
+                    printBooks(libraryService.getAllBooks(), "등록된 도서가 없습니다.", false);
                     break;
                 case "2":
-                    searchBook();
+                    searchBook(false);
                     break;
                 case "3":
                     borrowBook(member);
@@ -229,7 +228,8 @@ public class Main {
 
         try {
             Book book = libraryService.getBook(bookId);
-            System.out.println("현재 정보: " + book.getTitle() + " / " + book.getAuthor());
+            System.out.println("현재 제목: " + book.getTitle());
+            System.out.println("현재 저자: " + book.getAuthor());
             System.out.print("새 제목 (그대로 두려면 Enter): ");
             String title = scanner.nextLine().trim();
             System.out.print("새 저자 (그대로 두려면 Enter): ");
@@ -265,10 +265,10 @@ public class Main {
         }
     }
 
-    private static void searchBook() {
+    private static void searchBook(boolean showRenter) {
         System.out.print("검색할 제목(일부): ");
         String keyword = scanner.nextLine().trim();
-        printBooks(libraryService.searchByTitle(keyword), "검색 결과가 없습니다.");
+        printBooks(libraryService.searchByTitle(keyword), "검색 결과가 없습니다.", showRenter);
     }
 
     private static void borrowBook(Member member) {
@@ -310,14 +310,23 @@ public class Main {
         return bookId;
     }
 
-    private static void printBooks(List<Book> books, String emptyMessage) {
+    // showRenter가 true면(관리자) 대여 중인 도서를 빌린 회원 id도 보여준다.
+    // 제목에 어떤 문자가 있어도 저자와 구분되도록 저자 앞에 "저자:"를 붙인다.
+    private static void printBooks(List<Book> books, String emptyMessage, boolean showRenter) {
         if (books.isEmpty()) {
             System.out.println(emptyMessage);
             return;
         }
         for (Book book : books) {
-            String status = book.isRented() ? "대여중" : "대여가능";
-            System.out.printf("[%s] %s / %s (%s)%n", book.getId(), book.getTitle(), book.getAuthor(), status);
+            String status = "대여가능";
+            if (book.isRented()) {
+                status = "대여중";
+                if (showRenter) {
+                    String renterId = libraryService.getRenterId(book.getId());
+                    status += ": " + (renterId == null ? "알 수 없음" : renterId);
+                }
+            }
+            System.out.printf("[%s] %s / 저자: %s (%s)%n", book.getId(), book.getTitle(), book.getAuthor(), status);
         }
     }
 
@@ -331,7 +340,7 @@ public class Main {
             String status = rental.isReturned() ? ("반납완료 (" + rental.getReturnDate() + ")") : "대여중";
             String memberPart = showMemberId ? " / 회원 id: " + rental.getMemberId() : "";
             System.out.printf("[%s] %s%s / 대여일: %s / %s%n",
-                    rental.getBookId(), titleOf(rental.getBookId()), memberPart, rental.getBorrowDate(), status);
+                    rental.getBookId(), titleOf(rental), memberPart, rental.getBorrowDate(), status);
         }
     }
 
@@ -348,25 +357,20 @@ public class Main {
             List<Rental> activeRentals = libraryService.getActiveRentalsByMember(member.getId());
             int totalRentals = libraryService.getRentalsByMember(member.getId()).size();
 
-            String activePart = "대여 중 " + activeRentals.size() + "권";
-            if (!activeRentals.isEmpty()) {
-                List<String> titles = new ArrayList<>();
-                for (Rental rental : activeRentals) {
-                    titles.add(titleOf(rental.getBookId()));
-                }
-                activePart += " (" + String.join(", ", titles) + ")";
+            System.out.printf("%s / 대여 중 %d권 / 누적 대여 %d회%n", member.getId(), activeRentals.size(), totalRentals);
+            // 제목에 쉼표가 있을 수 있어 한 줄에 한 권씩 출력한다
+            for (Rental rental : activeRentals) {
+                System.out.printf("    [%s] %s%n", rental.getBookId(), titleOf(rental));
             }
-
-            System.out.printf("%s / %s / 누적 대여 %d회%n", member.getId(), activePart, totalRentals);
         }
     }
 
-    // 대여 기록에는 도서 id만 있으므로 출력할 때 현재 도서 정보에서 제목을 찾아온다
-    private static String titleOf(String bookId) {
+    // 도서가 남아 있으면 현재 제목(수정 내용 반영)을, 삭제됐으면 대여 당시 저장해 둔 제목을 보여준다
+    private static String titleOf(Rental rental) {
         try {
-            return libraryService.getBook(bookId).getTitle();
+            return libraryService.getBook(rental.getBookId()).getTitle();
         } catch (BookNotFoundException e) {
-            return "(삭제된 도서)";
+            return rental.getBookTitle() + " (삭제된 도서)";
         }
     }
 }

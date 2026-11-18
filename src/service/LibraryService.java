@@ -121,7 +121,7 @@ public class LibraryService {
         }
 
         book.setRented(true);
-        Rental rental = new Rental(bookId, memberId, LocalDate.now(), null, false);
+        Rental rental = new Rental(bookId, book.getTitle(), memberId, LocalDate.now(), null, false);
         rentals.add(rental);
         saveBooks();
         saveRentals();
@@ -162,6 +162,16 @@ public class LibraryService {
             }
         }
         return result;
+    }
+
+    // 해당 도서를 지금 빌리고 있는 회원 id. 대여 중이 아니면 null
+    public String getRenterId(String bookId) {
+        for (Rental rental : rentals) {
+            if (rental.getBookId().equals(bookId) && !rental.isReturned()) {
+                return rental.getMemberId();
+            }
+        }
+        return null;
     }
 
     // 반납한 기록까지 포함한 전체 대여 기록
