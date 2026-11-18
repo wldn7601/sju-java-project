@@ -127,8 +127,8 @@ project/
 ### 1) 소스코드 내려받기
 
 ```bash
-git clone <저장소 URL>
-cd <저장소 폴더>
+git clone https://github.com/wldn7601/sju-java-project.git
+cd sju-java-project
 ```
 
 `cd`로 들어간 이 폴더가 앞으로 모든 명령어를 실행할 위치입니다.
