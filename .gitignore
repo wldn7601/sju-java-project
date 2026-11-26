@@ -4,7 +4,7 @@
 data/*.csv
 
 # PDF 파일
-*.pdf
+project.pdf
 
 # ===== Java =====
 

@@ -22,6 +22,15 @@ public class Main {
     private static final LibraryService libraryService = new LibraryService();
     private static boolean running = true; // 시작 메뉴에서 "종료"를 고르면 false
 
+    private static final String[] START_MENU = {"로그인", "회원가입", "종료"};
+    private static final String[] ADMIN_MENU = {
+            "도서 등록", "도서 목록 보기", "도서 검색", "도서 정보 수정", "도서 삭제",
+            "전체 대여 현황", "전체 대여 기록", "회원 현황", "로그아웃"
+    };
+    private static final String[] USER_MENU = {
+            "도서 목록 보기", "도서 검색", "도서 대여", "도서 반납", "내 대여 현황", "내 대여 기록", "로그아웃"
+    };
+
     public static void main(String[] args) {
         System.out.println("==== 도서 대여 관리 프로그램 ====");
 
@@ -56,14 +65,30 @@ public class Main {
         }
     }
 
-    // 로그인 / 회원가입 / 종료를 선택하는 시작 메뉴
-    private static Member startMenu() {
+    // 메뉴를 출력하고 번호를 입력받는다. 메뉴에 있는 번호면 바로 아래에 그 기능의 이름을 출력한다.
+    // title이 null이면 메뉴 제목을 출력하지 않는다.
+    private static String selectMenu(String title, String[] items) {
         System.out.println();
-        System.out.println("1. 로그인");
-        System.out.println("2. 회원가입");
-        System.out.println("3. 종료");
+        if (title != null) {
+            System.out.println("-- " + title + " --");
+        }
+        for (int i = 0; i < items.length; i++) {
+            System.out.println((i + 1) + ". " + items[i]);
+        }
         System.out.print(">> ");
         String choice = scanner.nextLine().trim();
+
+        for (int i = 0; i < items.length; i++) {
+            if (choice.equals(String.valueOf(i + 1))) {
+                System.out.println("<" + items[i] + ">");
+            }
+        }
+        return choice;
+    }
+
+    // 로그인 / 회원가입 / 종료를 선택하는 시작 메뉴
+    private static Member startMenu() {
+        String choice = selectMenu(null, START_MENU);
 
         switch (choice) {
             case "1":
@@ -113,19 +138,7 @@ public class Main {
     // 관리자 메뉴: 도서 등록 / 목록 / 검색 / 수정 / 삭제 / 전체 대여 현황 / 전체 대여 기록 / 회원 현황
     private static void adminMenu() {
         while (true) {
-            System.out.println();
-            System.out.println("-- 관리자 메뉴 --");
-            System.out.println("1. 도서 등록");
-            System.out.println("2. 도서 목록 보기");
-            System.out.println("3. 도서 검색");
-            System.out.println("4. 도서 정보 수정");
-            System.out.println("5. 도서 삭제");
-            System.out.println("6. 전체 대여 현황");
-            System.out.println("7. 전체 대여 기록");
-            System.out.println("8. 회원 현황");
-            System.out.println("9. 로그아웃");
-            System.out.print(">> ");
-            String choice = scanner.nextLine().trim();
+            String choice = selectMenu("관리자 메뉴", ADMIN_MENU);
 
             switch (choice) {
                 case "1":
@@ -164,17 +177,7 @@ public class Main {
     // 일반 회원 메뉴: 목록 / 검색 / 대여 / 반납 / 내 대여 현황 / 내 대여 기록
     private static void userMenu(Member member) {
         while (true) {
-            System.out.println();
-            System.out.println("-- 회원 메뉴 --");
-            System.out.println("1. 도서 목록 보기");
-            System.out.println("2. 도서 검색");
-            System.out.println("3. 도서 대여");
-            System.out.println("4. 도서 반납");
-            System.out.println("5. 내 대여 현황");
-            System.out.println("6. 내 대여 기록");
-            System.out.println("7. 로그아웃");
-            System.out.print(">> ");
-            String choice = scanner.nextLine().trim();
+            String choice = selectMenu("회원 메뉴", USER_MENU);
 
             switch (choice) {
                 case "1":
